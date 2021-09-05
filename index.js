@@ -3,39 +3,32 @@ const canvasContext = CANVASTAG.getContext("2d");
 var gameIsRunning = true;
 const FRAME = 1000 / 60;
 
-const square = new component(15, 15, "green", 225, 225);
+const square = new Square(15, 15, "green", 225, 225, canvasContext);
 
-// var img = new Image();
-// img.src = "https://i.redd.it/pzaudo3x5nu51.jpg";
-// img.onload = function () {
-//   canvasContext.drawImage(img, 50, 0);
-// };
-
-function startGameLoop() {
+function gameLoop() {
   const loop = () => {
-    updateGame();
-
-    // canvasContext.fillStyle = "green";
-    // canvasContext.fillRect(0, 0, 15, 15);
-
+    render();
     window.requestAnimationFrame(loop);
   };
   window.requestAnimationFrame(loop);
 }
 
-function startInputProcess() {
+function inputProcess() {
   window.addEventListener("keydown", (event) => {
     event.preventDefault();
     console.log(event);
     square.keys = square.keys || [];
     square.keys[event.key] = event.type === "keydown";
     if (square[event.key]) {
-      square[event.key]();
+      square[event.key](true);
     }
     console.log(square);
   });
   window.addEventListener("keyup", function (event) {
     square.keys[event.key] = event.type === "keydown";
+    if (square[event.key]) {
+      square[event.key](false);
+    }
   });
 }
 
@@ -43,49 +36,63 @@ function clearScreen() {
   canvasContext.clearRect(0, 0, 500, 500);
 }
 
-function component(width, height, color, x, y) {
+function Square(width, height, color, x, y, ctx) {
   this.width = width;
   this.height = height;
   this.angle = 0;
   this.moveAngle = 0;
-  this.speed = 0;
+  this.speedX = 0;
+  this.speedY = 0;
   this.x = x;
   this.y = y;
-  this.update = function () {
-    canvasContext.save();
-    canvasContext.translate(this.x, this.y);
-    canvasContext.rotate(this.angle);
-    canvasContext.fillStyle = color;
-    canvasContext.fillRect(
-      this.width / 2,
-      this.height / 2,
-      this.width,
-      this.height
-    );
-    canvasContext.restore();
+  this.draw = () => {
+    ctx.beginPath();
+    ctx.fillStyle = color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.closePath();
   };
-
-  this.a = () => {
-    this.speed = -1;
+  this.a = (press) => {
+    if (press) {
+      this.speedX = 1;
+      this.x += -this.speedX;
+    } else {
+      this.speedX = 0;
+      this.x += -this.speedX;
+    }
   };
-  this.d = () => {
-    this.speed = 1;
+  this.d = (press) => {
+    if (press) {
+      this.speedX = 1;
+      this.x += this.speedX;
+    } else {
+      this.speedX = 0;
+      this.x += this.speedX;
+    }
   };
-
-  this.newPos = function () {
-    this.angle += (this.moveAngle * Math.PI) / 180;
-    this.x += this.speed * Math.sin(this.angle);
-    this.y -= this.speed * Math.cos(this.angle);
+  this.w = (press) => {
+    if (press) {
+      this.speedY = 1;
+      this.y += -this.speedY;
+    } else {
+      this.speedY = 0;
+      this.y += -this.speedY;
+    }
+  };
+  this.s = (press) => {
+    if (press) {
+      this.speedY = 1;
+      this.y += this.speedY;
+    } else {
+      this.speedY = 0;
+      this.y += this.speedY;
+    }
   };
 }
 
-function updateGame() {
+function render() {
   clearScreen();
-  square.moveAngle = 0;
-  square.speed = 0;
-  square.newPos();
-  square.update();
+  square.draw();
 }
 
-startGameLoop();
-startInputProcess();
+gameLoop();
+inputProcess();
