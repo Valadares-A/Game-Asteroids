@@ -9,11 +9,14 @@ var leftPressed = false;
 var upPressed = false;
 var downPressed = false;
 
-const square = new component(30, 30, "red", 225, 225);
+const square = new component(30, 30, "red", 225, 500);
 
 function clearScreen() {
   ctx.clearRect(0, 0, 500, 500)
 }
+
+let time = new Date();
+
 function component(width, height, color, x, y) {
   this.width = width;
   this.height = height;
@@ -32,8 +35,7 @@ function component(width, height, color, x, y) {
   }
 
   this.newPos = function () {
-    this.speed = 0;
-    this.moveAngle = 0;
+
     //this.angle += this.moveAngle * Math.PI / 180;
     if (rightPressed) {
       this.moveAngle = 3;
@@ -44,13 +46,24 @@ function component(width, height, color, x, y) {
 
     }
     if (upPressed) {
-      this.speed = -3;
+      if(this.speed == 0) {
+        this.speed = 1;
+      }
+      if (this.speed < 7) {
+
+        this.speed *= 0.25;
+      }
+
+    } else {
+
+      this.speed = 0;
+      this.moveAngle = 0;
 
     }
     if (downPressed) {
-      this.speed = 3;
+      this.speed -= 3;
 
-    }
+    } 
 
     this.angle += this.moveAngle * Math.PI / 180;
     this.x += this.speed * Math.sin(this.angle);
