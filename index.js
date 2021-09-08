@@ -15,16 +15,33 @@ function clearScreen() {
   ctx.clearRect(0, 0, 500, 500)
 }
 
-let time = new Date();
 
 function component(width, height, color, x, y) {
   this.width = width;
   this.height = height;
   this.angle = 0;
   this.moveAngle = 1;
-  this.speed = 1;
+  this.speed = 0;
   this.x = x;
   this.y = y;
+  this.increaseSpeed = function () {
+    this.speed = this.speed + 0.15;
+  }
+  this.setSpeedToZero = function () {
+    this.speed = 0;
+    this.moveAngle = 0;
+  }
+  // this.setSpeedToOne = function() {
+  //   console.log("entrou não é mais zero")
+  //   if (this.speed == 0) {
+  //     this.speed = 1;
+  //   }
+  // };
+
+
+
+
+
   this.update = function () {
     ctx.save();
     ctx.translate(this.x, this.y);
@@ -36,6 +53,15 @@ function component(width, height, color, x, y) {
 
   this.newPos = function () {
 
+    // const aceleracao = 0.25
+    //   if (this.speed == 0) {
+    //     this.speed = 1;
+    //   }
+    //   if (this.speed < 7) {
+    //     this.speed = this.speed + aceleracao;
+    //     console.log(this.speed)
+    //   }
+
     //this.angle += this.moveAngle * Math.PI / 180;
     if (rightPressed) {
       this.moveAngle = 3;
@@ -46,24 +72,28 @@ function component(width, height, color, x, y) {
 
     }
     if (upPressed) {
-      if(this.speed == 0) {
-        this.speed = 1;
-      }
+      // if (this.speed == 0) {
+      //   this.speed = 1;
+      // }
       if (this.speed < 7) {
-
-        this.speed *= 0.25;
+        this.increaseSpeed();
+        console.log(this.speed)
       }
-
     } else {
-
-      this.speed = 0;
-      this.moveAngle = 0;
+      this.setSpeedToZero();
+    }
+    
+    if (downPressed) {
+      console.log(this.speed)
+      if(this.speed == 0) {
+        this.speed = -1;
+      }
+      if(this.speed > -7) {
+        this.speed = (this.speed - 1);
+        console.log(this.speed)
+      }
 
     }
-    if (downPressed) {
-      this.speed -= 3;
-
-    } 
 
     this.angle += this.moveAngle * Math.PI / 180;
     this.x += this.speed * Math.sin(this.angle);
@@ -71,6 +101,8 @@ function component(width, height, color, x, y) {
 
   }
 }
+
+
 
 function keyDownHandler(e) {
   console.log(e)
