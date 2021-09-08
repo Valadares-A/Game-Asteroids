@@ -1,6 +1,5 @@
-
-var backgound = document.getElementById("game");
-var ctx = backgound.getContext("2d");
+var background = document.getElementById("game");
+var ctx = background.getContext("2d");
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
@@ -12,35 +11,30 @@ var downPressed = false;
 const square = new component(30, 30, "red", 225, 500);
 
 function clearScreen() {
-  ctx.clearRect(0, 0, 500, 500)
+  ctx.clearRect(0, 0, 500, 500);
 }
-
 
 function component(width, height, color, x, y) {
   this.width = width;
   this.height = height;
   this.angle = 0;
-  this.moveAngle = 1;
+  this.moveAngle = 0;
   this.speed = 0;
   this.x = x;
   this.y = y;
   this.increaseSpeed = function () {
     this.speed = this.speed + 0.15;
-  }
+  };
   this.setSpeedToZero = function () {
     this.speed = 0;
-    this.moveAngle = 0;
-  }
+    // this.moveAngle = 0;
+  };
   // this.setSpeedToOne = function() {
   //   console.log("entrou não é mais zero")
   //   if (this.speed == 0) {
   //     this.speed = 1;
   //   }
   // };
-
-
-
-
 
   this.update = function () {
     ctx.save();
@@ -49,10 +43,9 @@ function component(width, height, color, x, y) {
     ctx.fillStyle = color;
     ctx.fillRect(this.width / -2, this.height / -2, this.width, this.height);
     ctx.restore();
-  }
+  };
 
   this.newPos = function () {
-
     // const aceleracao = 0.25
     //   if (this.speed == 0) {
     //     this.speed = 1;
@@ -65,47 +58,43 @@ function component(width, height, color, x, y) {
     //this.angle += this.moveAngle * Math.PI / 180;
     if (rightPressed) {
       this.moveAngle = 3;
-
-    }
-    if (leftPressed) {
+    } else if (leftPressed) {
       this.moveAngle = -3;
-
+    } else {
+      this.moveAngle = 0;
     }
     if (upPressed) {
-      // if (this.speed == 0) {
-      //   this.speed = 1;
-      // }
       if (this.speed < 7) {
         this.increaseSpeed();
-        console.log(this.speed)
+      }
+    } else if (downPressed) {
+      if (this.speed > -7) {
+        this.speed = this.speed - 0.15;
       }
     } else {
       this.setSpeedToZero();
     }
-    
-    if (downPressed) {
-      console.log(this.speed)
-      if(this.speed == 0) {
-        this.speed = -1;
-      }
-      if(this.speed > -7) {
-        this.speed = (this.speed - 1);
-        console.log(this.speed)
-      }
 
-    }
-
-    this.angle += this.moveAngle * Math.PI / 180;
+    this.angle += (this.moveAngle * Math.PI) / 180;
     this.x += this.speed * Math.sin(this.angle);
     this.y -= this.speed * Math.cos(this.angle);
 
-  }
+    if (this.x > background.width + this.width) {
+      this.x = 0;
+    }
+    if (this.x < -this.width) {
+      this.x = background.width + this.width;
+    }
+    if (this.y > background.height + this.height) {
+      this.y = 0;
+    }
+    if (this.y < -this.height) {
+      this.y = background.height + this.height;
+    }
+  };
 }
 
-
-
 function keyDownHandler(e) {
-  console.log(e)
   if (e.key == "Right" || e.key == "ArrowRight") {
     rightPressed = true;
   }
@@ -134,8 +123,6 @@ function keyUpHandler(e) {
     downPressed = false;
   }
 }
-
-
 
 function updateGameArea() {
   clearScreen();
