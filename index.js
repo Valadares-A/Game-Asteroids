@@ -26,7 +26,13 @@ function component(width, height, color, x, y) {
     this.speed = this.speed + 0.15;
   };
   this.setSpeedToZero = function () {
-    this.speed = 0;
+    if (this.speed > 0) {
+      this.speed = this.speed - 0.15;
+    } else if (this.speed < 0) {
+      this.speed = this.speed + 0.15;
+    } else {
+      this.speed = 0;
+    }
     // this.moveAngle = 0;
   };
   // this.setSpeedToOne = function() {
