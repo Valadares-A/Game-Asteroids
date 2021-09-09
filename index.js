@@ -1,24 +1,23 @@
+console.log(window);
 const CANVASTAG = document.getElementById("game");
 const canvasContext = CANVASTAG.getContext("2d");
-var gameIsRunning = true;
+
 const numberOfAsteroids = 10;
 
-const square = new Square(15, 15, "green", 225, 225, canvasContext);
-const asteroidList = [];
+var rightPressed = false;
+var leftPressed = false;
+var upPressed = false;
+var downPressed = false;
 
-// for (let index = 0; index < numberOfAsteroids; index++) {
-//   const asteroid = new Asteroid(15, 15, "white", canvasContext);
-//   asteroid.setPositionAndDirection();
-//   asteroidList.push(asteroid);
-// }
+const spaceShip = new Square(15, 15, "green", 225, 225, canvasContext);
+const asteroidList = [];
 
 let time = new Date();
 
 function gameLoop() {
-  console.time();
   const loop = () => {
     render();
-    if (asteroidList.length < 10) {
+    if (asteroidList.length < numberOfAsteroids) {
       const newTime = new Date();
       if (time.getSeconds() !== newTime.getSeconds()) {
         const asteroid = new Asteroid(15, 15, "white", canvasContext);
@@ -33,22 +32,8 @@ function gameLoop() {
 }
 
 function inputProcess() {
-  window.addEventListener("keydown", (event) => {
-    event.preventDefault();
-    console.log(event);
-    square.keys = square.keys || [];
-    square.keys[event.key] = event.type === "keydown";
-    if (square[event.key]) {
-      square[event.key](true);
-    }
-    console.log(square);
-  });
-  window.addEventListener("keyup", function (event) {
-    square.keys[event.key] = event.type === "keydown";
-    if (square[event.key]) {
-      square[event.key](false);
-    }
-  });
+  document.addEventListener("keydown", keyDownHandler, false);
+  document.addEventListener("keyup", keyUpHandler, false);
 }
 
 function clearScreen() {
@@ -61,52 +46,109 @@ function Square(width, height, color, x, y, ctx) {
   this.color = color;
   this.angle = 0;
   this.moveAngle = 0;
-  this.speedX = 0;
-  this.speedY = 0;
+  this.speed = 0;
   this.x = x;
   this.y = y;
-  this.draw = () => {
-    ctx.beginPath();
+  this.increaseSpeed = function () {
+    this.speed = this.speed + 0.15;
+  };
+  this.setSpeedToZero = function () {
+    if (this.speed > 0) {
+      this.speed = this.speed - 0.05;
+    } else if (this.speed < 0) {
+      this.speed = this.speed + 0.05;
+    } else {
+      this.speed = 0;
+    }
+  };
+
+  this.draw = function () {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
     ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-    ctx.closePath();
+    ctx.fillRect(this.width / -2, this.height / -2, this.width, this.height);
+    ctx.restore();
   };
-  this.a = (press) => {
-    if (press) {
-      this.speedX = 1;
-      this.x += -this.speedX;
+
+  this.update = function () {
+    if (rightPressed) {
+      this.moveAngle = 3;
+    } else if (leftPressed) {
+      this.moveAngle = -3;
     } else {
-      this.speedX = 0;
-      this.x += -this.speedX;
+      this.moveAngle = 0;
+    }
+    if (upPressed) {
+      if (this.speed < 7) {
+        this.increaseSpeed();
+      }
+    } else if (downPressed) {
+      if (this.speed > -7) {
+        this.speed = this.speed - 0.15;
+      }
+    } else {
+      this.setSpeedToZero();
+    }
+
+    this.angle += (this.moveAngle * Math.PI) / 180;
+    this.x += this.speed * Math.sin(this.angle);
+    this.y -= this.speed * Math.cos(this.angle);
+
+    if (this.x > CANVASTAG.width + this.width) {
+      this.x = 0;
+    }
+    if (this.x < -this.width) {
+      this.x = CANVASTAG.width + this.width;
+    }
+    if (this.y > CANVASTAG.height + this.height) {
+      this.y = 0;
+    }
+    if (this.y < -this.height) {
+      this.y = CANVASTAG.height + this.height;
     }
   };
-  this.d = (press) => {
-    if (press) {
-      this.speedX = 1;
-      this.x += this.speedX;
-    } else {
-      this.speedX = 0;
-      this.x += this.speedX;
+
+  this.checkCollisions = function (object) {
+    if (
+      this.x < object.x + object.width &&
+      this.x + this.width > object.x &&
+      this.y < object.y + object.height &&
+      this.y + this.height > object.y
+    ) {
+      console.log("bati");
     }
   };
-  this.w = (press) => {
-    if (press) {
-      this.speedY = 1;
-      this.y += -this.speedY;
-    } else {
-      this.speedY = 0;
-      this.y += -this.speedY;
-    }
-  };
-  this.s = (press) => {
-    if (press) {
-      this.speedY = 1;
-      this.y += this.speedY;
-    } else {
-      this.speedY = 0;
-      this.y += this.speedY;
-    }
-  };
+}
+
+function keyDownHandler(e) {
+  if (e.key == "Right" || e.key == "ArrowRight") {
+    rightPressed = true;
+  }
+  if (e.key == "Left" || e.key == "ArrowLeft") {
+    leftPressed = true;
+  }
+  if (e.key == "Up" || e.key == "ArrowUp") {
+    upPressed = true;
+  }
+  if (e.key == "Down" || e.key == "ArrowDown") {
+    downPressed = true;
+  }
+}
+
+function keyUpHandler(e) {
+  if (e.key == "Right" || e.key == "ArrowRight") {
+    rightPressed = false;
+  }
+  if (e.key == "Left" || e.key == "ArrowLeft") {
+    leftPressed = false;
+  }
+  if (e.key == "Up" || e.key == "ArrowUp") {
+    upPressed = false;
+  }
+  if (e.key == "Down" || e.key == "ArrowDown") {
+    downPressed = false;
+  }
 }
 
 function Asteroid(width, height, color, ctx) {
@@ -119,7 +161,8 @@ function Asteroid(width, height, color, ctx) {
   this.speedY = 0.3;
   this.x = 0;
   this.y = 0;
-  this.draw = () => {
+  this.canRender = true;
+  this.draw = function () {
     ctx.save();
     ctx.beginPath();
     ctx.fillStyle = this.color;
@@ -129,22 +172,33 @@ function Asteroid(width, height, color, ctx) {
     ctx.closePath();
     ctx.restore();
   };
-  this.move = () => {
+  this.move = function () {
     this.x += this.speedX;
     this.y += this.speedY;
     this.angle += (this.moveAngle * Math.PI) / 180;
     if (this.x > CANVASTAG.width + this.width) {
-      this.x = -this.width;
+      this.x = 0;
     } else if (this.x < -this.width) {
       this.x = CANVASTAG.width + this.width;
     }
     if (this.y > CANVASTAG.height + this.height) {
-      this.y = -this.height;
+      this.y = 0;
     } else if (this.y < -this.height) {
       this.y = CANVASTAG.height + this.height;
     }
   };
-  this.setPositionAndDirection = () => {
+  this.checkCollisions = function (object, index) {
+    if (
+      this.x < object.x + object.width &&
+      this.x + this.width > object.x &&
+      this.y < object.y + object.height &&
+      this.y + this.height > object.y
+    ) {
+      console.log("Bati: ", asteroidList[index]);
+      asteroidList[index].canRender = false;
+    }
+  };
+  this.setPositionAndDirection = function () {
     const xDirection = Math.floor(Math.random() * 2);
     const yDirection = Math.floor(Math.random() * 2);
     this.moveAngle = Math.floor(Math.random() * 2);
@@ -157,10 +211,14 @@ function Asteroid(width, height, color, ctx) {
 
 function render() {
   clearScreen();
-  square.draw();
-  asteroidList.forEach((asteroid) => {
-    asteroid.draw();
-    asteroid.move();
+  spaceShip.update();
+  spaceShip.draw();
+  asteroidList.forEach((asteroid, index) => {
+    if (asteroid.canRender) {
+      asteroid.draw();
+      asteroid.move();
+      asteroid.checkCollisions(spaceShip, index);
+    }
   });
 }
 
