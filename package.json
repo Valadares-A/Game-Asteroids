@@ -1,0 +1,24 @@
+{
+  "name": "Game-Asteroids",
+  "version": "1.0.0",
+  "description": "Replica do famoso jogo Asteroids para aprender e aperfeiçoar a linguagem de programação Javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Valadares-A/Game-Asteroids.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Valadares-A/Game-Asteroids/issues"
+  },
+  "homepage": "https://github.com/Valadares-A/Game-Asteroids#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.2.0"
+  }
+}

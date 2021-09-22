@@ -5,10 +5,136 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Asteroids</title>
-    <link rel="stylesheet" href="style.css" />
   </head>
+  <style>
+    canvas {
+      border: 1px solid red;
+      background-color: black;
+      border-radius: 5px;
+    }
+  </style>
+  <script src="/socket.io/socket.io.js"></script>
   <body>
     <canvas id="game" width="500" height="500"></canvas>
-    <script src="index.js"></script>
+    <script>
+      console.log(window);
+      const CANVASTAG = document.getElementById("game");
+      const canvasContext = CANVASTAG.getContext("2d");
+      const IO = io();
+      console.log(IO);
+      const currentUser = `user-${new Date().getTime()}`;
+      let GAME = null;
+
+      function gameLoop() {
+        const socketIO = () => {
+          IO.emit("set-name", currentUser);
+
+          IO.on("users-changed", (data) => {
+            let user = data["user"];
+            if (data["event"] === "left") {
+              console.log(user, "left");
+              console.log(GAME);
+            } else {
+              console.log(user, "joined");
+            }
+          });
+
+          IO.on("gameState", (game) => {
+            GAME = game;
+          });
+        };
+        const loop = () => {
+          let screen = {
+            width: CANVASTAG.width,
+            height: CANVASTAG.height,
+          };
+          IO.emit("getGameState", currentUser, screen);
+
+          canvasContext.clearRect(0, 0, 500, 500);
+          if (GAME) {
+            for (const player in GAME.players) {
+              drawPlayer(GAME.players[player], canvasContext);
+            }
+          }
+          window.requestAnimationFrame(loop);
+        };
+        window.requestAnimationFrame(loop);
+        socketIO();
+      }
+
+      function drawPlayer(player, ctx) {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.angle);
+        ctx.fillStyle = player.color;
+        ctx.beginPath();
+        ctx.moveTo(player.width / 2, -player.height / 2);
+        ctx.lineTo(player.height, player.width);
+        ctx.lineTo(0, player.height);
+        // ctx.lineTo(player.width / 2, -player.height / 2);
+        ctx.closePath();
+        ctx.strokeStyle = player.color;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function updatePlayer(player, CANVASTAG) {
+        if (player.keys.rightPressed) {
+          player.moveAngle = 3;
+        } else if (player.keys.leftPressed) {
+          player.moveAngle = -3;
+        } else {
+          player.moveAngle = 0;
+        }
+        if (player.keys.upPressed) {
+          if (player.speed < player.maxSpeed) {
+            player.speed = player.speed + 0.15;
+          }
+        } else if (player.keys.downPressed) {
+          if (player.speed > -player.maxSpeed) {
+            player.speed = player.speed - 0.15;
+          }
+        } else {
+          if (player.speed > 0) {
+            player.speed = player.speed - 0.05;
+          } else if (player.speed < 0) {
+            player.speed = player.speed + 0.05;
+          } else {
+            player.speed = 0;
+          }
+        }
+
+        player.angle += (player.moveAngle * Math.PI) / 180;
+        player.x += player.speed * Math.sin(player.angle);
+        player.y -= player.speed * Math.cos(player.angle);
+
+        if (player.x > CANVASTAG.width + player.width) {
+          player.x = 0;
+        }
+        if (player.x < -player.width) {
+          player.x = CANVASTAG.width + player.width;
+        }
+        if (player.y > CANVASTAG.height + player.height) {
+          player.y = 0;
+        }
+        if (player.y < -player.height) {
+          player.y = CANVASTAG.height + player.height;
+        }
+      }
+
+      function inputProcess() {
+        document.addEventListener("keydown", keyDownHandler, false);
+        document.addEventListener("keyup", keyUpHandler, false);
+      }
+      function keyDownHandler(e) {
+        IO.emit("keydown", currentUser, { key: e.key });
+      }
+
+      function keyUpHandler(e) {
+        IO.emit("keyup", currentUser, { key: e.key });
+      }
+      gameLoop();
+      inputProcess();
+    </script>
   </body>
 </html>
