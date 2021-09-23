@@ -1,5 +1,16 @@
+/* body {
+  height: calc(100vh - 16px) !important;
+} */
+
 canvas {
-  border: 1px solid red;
+  border: 1px solid gray;
   background-color: black;
   border-radius: 5px;
+}
+
+.game-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 16px) !important;
 }

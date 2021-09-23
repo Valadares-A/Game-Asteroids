@@ -14,6 +14,11 @@ var spacePressed = false;
 const spaceShip = new Square(15, 15, "green", 225, 225, canvasContext);
 const asteroidList = [];
 const bulletList = [];
+const asteroidsHeight = [
+  { width: 15, height: 15, type: "p" },
+  { width: 30, height: 30, type: "m" },
+  { width: 60, height: 60, type: "g" },
+];
 
 let time = new Date();
 let GAME = null;
@@ -26,7 +31,15 @@ function gameLoop() {
     if (asteroidList.length < numberOfAsteroids) {
       const newTime = new Date();
       if (time.getSeconds() !== newTime.getSeconds()) {
-        const asteroid = new Asteroid(15, 15, "white", canvasContext);
+        const atype = Math.floor(Math.random() * 3);
+        const { width, height, type } = asteroidsHeight[atype];
+        const asteroid = new Asteroid(
+          width,
+          height,
+          "white",
+          type,
+          canvasContext
+        );
         asteroid.setPositionAndDirection();
         asteroidList.push(asteroid);
         time = newTime;
@@ -177,9 +190,9 @@ function keyDownHandler(e) {
   if (e.key == "Up" || e.key == "ArrowUp") {
     upPressed = true;
   }
-  if (e.key == "Down" || e.key == "ArrowDown") {
-    downPressed = true;
-  }
+  // if (e.key == "Down" || e.key == "ArrowDown") {
+  //   downPressed = true;
+  // }
   if (e.key === "z") {
     spacePressed = true;
     // spaceShip.alreadyShoot = true;
@@ -205,7 +218,7 @@ function keyUpHandler(e) {
   }
 }
 
-function Asteroid(width, height, color, ctx) {
+function Asteroid(width, height, color, type, ctx) {
   this.width = width;
   this.height = height;
   this.color = color;
@@ -216,53 +229,57 @@ function Asteroid(width, height, color, ctx) {
   this.x = 0;
   this.y = 0;
   this.canRender = true;
+  this.type = type;
+  this.hitCount = 0;
   this.draw = function () {
     ctx.save();
     ctx.beginPath();
     ctx.fillStyle = this.color;
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
+    ctx.strokeStyle = "green";
+    ctx.stroke();
     ctx.fillRect(this.width / 2, this.height / 2, this.width, this.height);
     ctx.closePath();
     ctx.restore();
 
-    ctx.beginPath();
-    ctx.fillStyle = "green";
-    ctx.fillRect(
-      this.x + this.width,
-      this.y + this.height,
-      this.width,
-      this.height
-    );
-    ctx.closePath();
+    // ctx.beginPath();
+    // ctx.fillStyle = "green";
+    // ctx.fillRect(
+    //   this.x + this.width,
+    //   this.y + this.height,
+    //   this.width,
+    //   this.height
+    // );
+    // ctx.closePath();
 
-    ctx.beginPath();
-    ctx.fillStyle = "red";
-    ctx.fillRect(
-      this.x - this.width,
-      this.y - this.height,
-      this.width,
-      this.height
-    );
-    ctx.closePath();
-    ctx.beginPath();
-    ctx.fillStyle = "blue";
-    ctx.fillRect(
-      this.x + this.width,
-      this.y - this.height,
-      this.width,
-      this.height
-    );
-    ctx.closePath();
-    ctx.beginPath();
-    ctx.fillStyle = "yellow";
-    ctx.fillRect(
-      this.x - this.width,
-      this.y + this.height,
-      this.width,
-      this.height
-    );
-    ctx.closePath();
+    // ctx.beginPath();
+    // ctx.fillStyle = "red";
+    // ctx.fillRect(
+    //   this.x - this.width,
+    //   this.y - this.height,
+    //   this.width,
+    //   this.height
+    // );
+    // ctx.closePath();
+    // ctx.beginPath();
+    // ctx.fillStyle = "blue";
+    // ctx.fillRect(
+    //   this.x + this.width,
+    //   this.y - this.height,
+    //   this.width,
+    //   this.height
+    // );
+    // ctx.closePath();
+    // ctx.beginPath();
+    // ctx.fillStyle = "yellow";
+    // ctx.fillRect(
+    //   this.x - this.width,
+    //   this.y + this.height,
+    //   this.width,
+    //   this.height
+    // );
+    // ctx.closePath();
   };
   this.move = function () {
     this.x += this.speedX;
@@ -286,22 +303,84 @@ function Asteroid(width, height, color, ctx) {
       this.y < object.y + object.height &&
       this.y + this.height > object.y
     ) {
-      asteroidList[index].canRender = false;
-      asteroidList.splice(index, 1);
-      score++;
+      switch (this.type) {
+        case "m":
+          this.hitCount++;
+          if (this.hitCount === 2) {
+            asteroidList[index].canRender = false;
+            const astInfo = {
+              width: asteroidsHeight[0].width,
+              height: asteroidsHeight[0].height,
+              color: "white",
+              type: asteroidsHeight[0].type,
+              x: this.x,
+              y: this.y,
+            };
+            asteroidList.splice(index, 1);
+            score = score + 10;
+            asteroidList.push(...generateAsteroid(2, astInfo));
+          }
+          break;
+        case "g":
+          this.hitCount++;
+          if (this.hitCount === 2) {
+            asteroidList[index].canRender = false;
+            const astInfo = {
+              width: asteroidsHeight[1].width,
+              height: asteroidsHeight[1].height,
+              color: "white",
+              type: asteroidsHeight[1].type,
+              x: this.x,
+              y: this.y,
+            };
+            asteroidList.splice(index, 1);
+            score = score + 30;
+            asteroidList.push(...generateAsteroid(4, astInfo));
+          }
+          break;
+
+        default:
+          asteroidList[index].canRender = false;
+          asteroidList.splice(index, 1);
+          score++;
+          break;
+      }
     }
   };
-  this.setPositionAndDirection = function () {
+  this.setPositionAndDirection = function (dir) {
     const xDirection = Math.floor(Math.random() * 2);
     const yDirection = Math.floor(Math.random() * 2);
-    this.moveAngle = Math.floor(Math.random() * 2);
-    // this.moveAngle = 0;
-    this.x = Math.floor(Math.random() * CANVASTAG.width) * xDirection;
-    this.y = Math.floor(Math.random() * CANVASTAG.height) * yDirection;
+    // this.moveAngle = Math.floor(Math.random() * 2);
+    this.moveAngle = 0;
+    if (dir) {
+      const { x, y } = dir;
+      this.x = x;
+      this.y = y;
+    } else {
+      this.x = Math.floor(Math.random() * CANVASTAG.width) * xDirection;
+      this.y = Math.floor(Math.random() * CANVASTAG.height) * yDirection;
+    }
     this.speedX = xDirection ? this.speedX * -1 : this.speedX;
     this.speedY = xDirection ? this.speedX * -1 : this.speedX;
   };
 }
+
+function generateAsteroid(qtd, info) {
+  const a = [];
+  for (let i = 0; i < qtd; i++) {
+    const ast = new Asteroid(
+      info.width,
+      info.height,
+      info.color,
+      info.type,
+      canvasContext
+    );
+    ast.setPositionAndDirection({ x: info.x, y: info.y });
+    a.push(ast);
+  }
+  return a;
+}
+
 function Bullet(x, y, angle, width, height, color, ctx) {
   this.width = width;
   this.height = height;
